@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Exchange Rates: With AI Advisor</title>
+    <link rel="icon" type="image/x-icon" href="https://media.discordapp.net/attachments/1254650014991384680/1321328919588110347/money_1.png?ex=676cd6f3&is=676b8573&hm=ccdeb181d803470a1e65625d855de2d588f15c7f65f34c77b6fc4f88d465378e&=&format=webp&quality=lossless&width=662&height=662">
+
+    <style>
+      body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #121212; 
+}
+
+.container {
+    background: #2c2f38; 
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    text-align: center;
+    color: #fff; 
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #fff; 
+}
+
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    background-color: #222;
+    color:white
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    color: #fff;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #444;
+}
+
+.result {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #fff;
+}
+
+a:link {
+    color:gray;
+    text-decoration: underline;
+}
+
+.country-info {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.country-info img {
+    width: 40px;
+    height: 25px;
+    border: 1px solid #ccc;
+}
+
+.country-details {
+    text-align: left;
+}
+
+.country-details span {
+    display: block;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #bbb;
+}
+
+footer a {
+    color: #bbb;
+    text-decoration: none;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Currency Comparison</h1>
+        <input type="number" id="amount" placeholder="Amount">
+        <select id="fromCurrency"></select>
+        <button onclick="compareCurrencies()">Compare</button>
+        <h2>Or Convert to Custom Currency</h2>
+        <select id="customCurrency"></select>
+        <button onclick="convertToCustomCurrency()">Convert</button>
+        <div id="result"></div>
+        <div id="countryInfo" class="country-info"></div>
+        <div id="tradeAdvice"></div>
+        <footer>
+            These predictions/trading advice are made with the use of Generative AI. Follow this advice at your own risk. <br> Made by Rehan Raj
+            
+            <br>
+            <br>
+            <a href="https://www.flaticon.com/free-icons/coins" title="coins icons">Coins icons created by cah nggunung - Flaticon</a>
+        </footer>
+    </div>
+
+    <script>
+        const apiKey = '0e678a18d0a1861d213b30b27655b904';
+        const apiUrl = `http://data.fixer.io/api/latest?access_key=${apiKey}`;
+        const countryApiUrl = "https://restcountries.com/v3.1/all";
+        const commonCurrencies = ["USD", "EUR", "JPY", "GBP", "INR"];
+        let countryData = {};
+
+        async function fetchCurrencies() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (!data.success) {
+                    document.getElementById('result').textContent = 'Error fetching currencies';
+                    return;
+                }
+
+                const currencies = Object.keys(data.rates);
+                const fromCurrency = document.getElementById('fromCurrency');
+                const customCurrency = document.getElementById('customCurrency');
+
+                commonCurrencies.forEach(currency => {
+                    const optionFrom = document.createElement('option');
+                    const optionCustom = document.createElement('option');
+
+                    optionFrom.value = currency;
+                    optionFrom.textContent = currency;
+                    fromCurrency.appendChild(optionFrom);
+
+                    optionCustom.value = currency;
+                    optionCustom.textContent = currency;
+                    customCurrency.appendChild(optionCustom);
+                });
+
+                currencies.forEach(currency => {
+                    if (!commonCurrencies.includes(currency)) {
+                        const optionFrom = document.createElement('option');
+                        const optionCustom = document.createElement('option');
+
+                        optionFrom.value = currency;
+                        optionFrom.textContent = currency;
+                        fromCurrency.appendChild(optionFrom);
+
+                        optionCustom.value = currency;
+                        optionCustom.textContent = currency;
+                        customCurrency.appendChild(optionCustom);
+                    }
+                });
+
+                await fetchCountryData();
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error connecting to the API';
+            }
+        }
+
+        async function fetchCountryData() {
+            try {
+                const response = await fetch(countryApiUrl);
+                const data = await response.json();
+
+                for (const country of data) {
+                    if (country.currencies) {
+                        for (const currency of Object.keys(country.currencies)) {
+                            const gdp = await fetchGDP(country.cca2);
+                            countryData[currency] = {
+                                name: country.name.common,
+                                flag: country.flags?.png || '',
+                                population: country.population?.toLocaleString() || 'N/A',
+                                gdp: gdp || 'N/A'
+                            };
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching country data', error);
+            }
+        }
+
+        async function fetchGDP(countryCode) {
+            try {
+                const gdpApiUrl = `https://api.worldbank.org/v2/country/${countryCode}/indicator/NY.GDP.MKTP.CD?format=json`;
+                const response = await fetch(gdpApiUrl);
+                const data = await response.json();
+
+                if (data[1] && data[1][0]) {
+                    return data[1][0].value?.toLocaleString();
+                }
+                return null;
+            } catch (error) {
+                console.error(`Error fetching GDP for ${countryCode}`, error);
+                return null;
+            }
+        }
+
+        async function queryAIAdvice(input) {
+            const data = {
+                "inputs": input
+            };
+
+            try {
+                const response = await fetch("https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer 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`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                console.log(result);  
+
+                if (response.ok) {
+                    return result[0]?.generated_text.trim() || 'No advice generated.';
+                } else {
+                    console.error("Error with API request:", result);
+                    return 'Error fetching AI advice';
+                }
+            } catch (error) {
+                console.error('Request failed', error);
+                return 'Unable to fetch AI advice';
+            }
+        }
+
+        async function compareCurrencies() {
+            const amount = document.getElementById('amount').value;
+            const fromCurrency = document.getElementById('fromCurrency').value;
+
+            document.getElementById('countryInfo').innerHTML = '';
+            document.getElementById('tradeAdvice').innerHTML = '';
+
+            if (!amount || !fromCurrency) {
+                document.getElementById('result').textContent = 'Please fill all fields';
+                return;
+            }
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (!data.success) {
+                    document.getElementById('result').textContent = 'Error fetching conversion rates';
+                    return;
+                }
+
+                const rateFrom = data.rates[fromCurrency];
+                let tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Currency</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                commonCurrencies.forEach(currency => {
+                    const rateTo = data.rates[currency];
+                    const convertedAmount = (amount / rateFrom) * rateTo;
+                    tableHtml += `
+                        <tr>
+                            <td>${currency}</td>
+                            <td>${convertedAmount.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += '</tbody></table>';
+                document.getElementById('result').innerHTML = tableHtml;
+
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error comparing currencies';
+            }
+        }
+
+        async function convertToCustomCurrency() {
+            const amount = document.getElementById('amount').value;
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const customCurrency = document.getElementById('customCurrency').value;
+
+            if (!amount || !fromCurrency || !customCurrency) {
+                document.getElementById('result').textContent = 'Please fill all fields';
+                return;
+            }
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (!data.success) {
+                    document.getElementById('result').textContent = 'Error fetching conversion rates';
+                    return;
+                }
+
+                const rateFrom = data.rates[fromCurrency];
+                const rateTo = data.rates[customCurrency];
+
+                const convertedAmount = (amount / rateFrom) * rateTo;
+                const country = countryData[customCurrency];
+
+                document.getElementById('result').innerHTML = 
+                    `<p>${amount} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${customCurrency}</p>`;
+
+                if (country) {
+                    document.getElementById('countryInfo').innerHTML = 
+                        `<img src="${country.flag}" alt="Flag of ${country.name}">
+                         <div class="country-details">
+                            <span><strong>Country:</strong> ${country.name}</span>
+                            <span><strong>Population:</strong> ${country.population}</span>
+                            <span><strong>GDP:</strong> ${country.gdp}</span>
+                         </div>`;
+                } else {
+                    document.getElementById('countryInfo').textContent = '';
+                }
+                       
+                const currencyPair = `${fromCurrency}/${commonCurrencies[0]}`; 
+                const tradeAdvice = await queryAIAdvice(`Answer with either Buy Sell or Hold. Should I buy, sell or hold the trade ${fromCurrency} for the value of ${convertedAmount.toFixed(2)/amount} to ${customCurrency} right now?. ANSWER IN ONE LINE AND PROVIDE ONE LINE AS TO WHY TO BUY SELL OR HOLD. ONLY PICK ONE AND DO NOT GO OVER 10 WORDS TOTAL.`);
+                const trimmedTradeAdvice = tradeAdvice.replace(`Answer with either Buy Sell or Hold. Should I buy, sell or hold the trade ${fromCurrency} for the value of ${convertedAmount.toFixed(2)/amount} to ${customCurrency} right now?. ANSWER IN ONE LINE AND PROVIDE ONE LINE AS TO WHY TO BUY SELL OR HOLD. ONLY PICK ONE AND DO NOT GO OVER 10 WORDS TOTAL.`, '')
+               const trimmedTradeAdvice1 = trimmedTradeAdvice.replace(`ANSWER IN ONE LINE AND PROVIDE ONE LINE AS TO WHY TO BUY SELL OR HOLD.`,"")
+               
+                document.getElementById('tradeAdvice').innerHTML = `<strong>Trading Advice:</strong> ${trimmedTradeAdvice}`;
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error converting currency';
+            }
+        }
+
+        fetchCurrencies();
+    </script>
+</body>
+</html>
