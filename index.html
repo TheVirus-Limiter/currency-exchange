@@ -200,7 +200,9 @@ const countryApiUrl = "https://api.allorigins.win/raw?url=https://restcountries.
         async function fetchCountryData() {
             try {
                 const response = await fetch(countryApiUrl);
-                const data = await response.json();
+                const text = await response.text();
+
+                const data = JSON.parse(text);
 
                 for (const country of data) {
                     if (country.currencies) {
