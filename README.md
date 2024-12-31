@@ -39,13 +39,13 @@ To run the project locally, follow these steps:
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/yourusername/currency-comparison-app.git
+    git clone https://github.com/TheVirus-Limiter/currency-exchange.git
     ```
 
 2. Navigate to the project folder:
 
     ```bash
-    cd currency-comparison-app
+    cd currency-exchange
     ```
 
 3. Open the `index.html` file in your preferred browser:
