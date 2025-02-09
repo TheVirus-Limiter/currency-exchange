@@ -242,7 +242,7 @@ footer a {
             };
 
             try {
-                const response = await fetch("https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct", {
+                const response = await fetch("https://api-inference.huggingface.co/models/google/gemma-2-2b-it", {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer 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`,
@@ -362,8 +362,10 @@ footer a {
                 const tradeAdvice = await queryAIAdvice(`Answer with either Buy Sell or Hold. Should I buy, sell or hold the trade ${fromCurrency} for the value of ${convertedAmount.toFixed(2)/amount} to ${customCurrency} right now?. ANSWER IN ONE LINE AND PROVIDE ONE LINE AS TO WHY TO BUY SELL OR HOLD. ONLY PICK ONE AND DO NOT GO OVER 10 WORDS TOTAL.`);
                 const trimmedTradeAdvice = tradeAdvice.replace(`Answer with either Buy Sell or Hold. Should I buy, sell or hold the trade ${fromCurrency} for the value of ${convertedAmount.toFixed(2)/amount} to ${customCurrency} right now?. ANSWER IN ONE LINE AND PROVIDE ONE LINE AS TO WHY TO BUY SELL OR HOLD. ONLY PICK ONE AND DO NOT GO OVER 10 WORDS TOTAL.`, '')
                const trimmedTradeAdvice1 = trimmedTradeAdvice.replace(`ANSWER IN ONE LINE AND PROVIDE ONE LINE AS TO WHY TO BUY SELL OR HOLD.`,"")
-               
-                document.getElementById('tradeAdvice').innerHTML = `<strong>Trading Advice:</strong> ${trimmedTradeAdvice}`;
+               const trimmedTradeAdvice2 = trimmedTradeAdvice.replaceAll(`**`, '')
+               const trimmedTradeAdvice3 = trimmedTradeAdvice2.replaceAll(`Answer`, '')
+
+                document.getElementById('tradeAdvice').innerHTML = `<strong>Trading Advice:</strong> ${trimmedTradeAdvice2}`;
             } catch (error) {
                 document.getElementById('result').textContent = 'Error converting currency';
             }
