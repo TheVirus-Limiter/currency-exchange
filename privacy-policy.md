@@ -48,5 +48,5 @@ If you have any questions or concerns about this Privacy Policy or our data prac
 
 **Email**: rehanraj0911@gmail.com
 
-Thank you for using the **Currency Comparison and Conversion Web App**.
+Thank you for using the **ForexSensei App**.
 
