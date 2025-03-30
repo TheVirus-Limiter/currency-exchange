@@ -379,12 +379,8 @@ footer a {
 
                 if (country) {
                     document.getElementById('countryInfo').innerHTML = 
-                        `<img src="${country.flag}" alt="Flag of ${country.name}">
-                         <div class="country-details">
-                            <span><strong>Country:</strong> ${country.name}</span>
-                            <span><strong>Population:</strong> ${country.population}</span>
-                            <span><strong>GDP:</strong> ${country.gdp}</span>
-                         </div>`;
+                        <img src="${country.flag}" alt="Flag of ${country.name}">
+                    
                 } else {
                     document.getElementById('countryInfo').textContent = '';
                 }
